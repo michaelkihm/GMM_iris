@@ -32,15 +32,39 @@ void GMM::fit(Mat *_features, Mat *_targets,const int _classes)
     cout << "Start to train " << classes << " models." << endl;
     runEM();
     cout << "Finished training!" << endl;
-    
+    cout << responsibility_mat << endl;
 }
 
 // ***************************************************
 // predict
 // ***************************************************
-const Mat GMM::predict( Mat *test_data) 
+const vector<int> GMM::predict( Mat *test_data) 
 {
-    return Mat(0,0,CV_8U);
+    //return Mat(0,0,CV_8U);
+    vector<int> result;
+   // int t;
+    for(int r=0; r<responsibility_mat.rows; r++)
+    {
+        //t = findColMaxIndex(responsibility_mat.row(r);
+        result.push_back(findColMaxIndex(responsibility_mat.row(r)));
+    }
+
+    return result;
+}
+
+int GMM::findColMaxIndex(Mat column)
+{
+    double max=numeric_limits<int>::min();
+    int index;
+    for(int c=0; c < column.cols; c++)
+    {
+        if(column.at<double>(0,c) > max)
+        {
+            index=c;
+            max = column.at<double>(0,c);
+        }
+    }
+    return index;
 }
 
 // ***************************************************

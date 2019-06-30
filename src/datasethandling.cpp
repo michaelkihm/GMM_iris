@@ -48,7 +48,6 @@ vector<Mat> splitFeaturesAndLabels(Mat *dataset, uint feature_col_range[2], uint
     int col = 0;
    // Mat features = dataset->col(feature_col_range[0]);
     Mat features = Mat(dataset->rows, feature_col_range[1] - feature_col_range[0], CV_64FC1 );
-    cout << "TEST SUM: "<<feature_col_range[1] - feature_col_range[0] << endl;
     for(uint c=feature_col_range[0]; c<feature_col_range[1]; c++)
     {
      for(int r=0; r < dataset->rows; r++)

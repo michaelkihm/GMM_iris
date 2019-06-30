@@ -12,6 +12,7 @@
 #include "gmm.hpp"
 #include "pca.hpp"
 #include <string>
+#include <fstream>
 
 using namespace std;
 
@@ -33,21 +34,53 @@ int main(int argc, const char * argv[]) {
     //CSVReader csv_label_reader(path_label);
     //Mat labels_data = csv_label_reader.getDataset();
 
-    cout << "LABELS"<<labels << endl;
-    cout << "FEATURES"<< features << endl;
+    //cout << "LABELS"<<labels << endl;
+    //cout << "FEATURES"<< features << endl;
     //PCA
     const int no_principal_components = 2;  
     PrincipalComponentAnalysis pca(&features);
     pca.fit(no_principal_components);
     Mat pca_data = pca.getProjectedDataSet();
+
+    // ofstream myfile;
+    // myfile.open ("pca.csv");
+    // for(int r=0; r < pca_data.rows; r++)
+    // {
+    //     myfile << pca_data.at<double>(r,0)<<","<<pca_data.at<double>(r,1)<<endl;
+    // }
+    //  myfile.close();
     
     //GMM
     GMM gmm;
     const int species_classes = 3;
     gmm.fit(&pca_data, NULL,species_classes);
     
-    
-    
+    double accuracy;
+    int sum =0;
+    Mat label_int;
+    vector<int> predictions = gmm.predict(NULL);
+    labels.convertTo(label_int,CV_16UC1);
+
+    //cout <<"predictions:" << endl;
+    //for(uint i=0; i < predictions.size(); i++)
+      //  cout << predictions[i] << endl;
+     //cout << "label int: "<<endl << label_int << endl;
+
+    for(int i =0; i < label_int.rows; i++)
+    {
+        if(label_int.at<short>(i,0) == 0)
+            label_int.at<short>(i,0) = 1;
+
+        if(label_int.at<short>(i,0) == 1)
+            label_int.at<short>(i,0) = 0;
+    }
+
+    for(int i=0; i < labels.rows; i++)
+        if(predictions[i] == label_int.at<short>(i,0))
+            sum += 1;
+
+    accuracy = (double)sum/labels.rows;
+    cout << "accuracy: " << accuracy << endl;
     
     
 

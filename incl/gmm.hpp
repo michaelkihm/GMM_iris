@@ -32,7 +32,7 @@ class GMM
 public:
     GMM();
     void fit( Mat *_features, Mat *_targets,const int _classes);
-    const Mat predict( Mat *test_data);
+    const vector<int> predict( Mat *test_data);
     void saveModels();
     void loadTrainedModels();
     
@@ -60,7 +60,7 @@ private:
     double multiVariateGaussian(GaussianModel &model,const int dataindex) const;
     
  
-    
+    int findColMaxIndex(Mat column);
     
 };
 
