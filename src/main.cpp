@@ -58,22 +58,22 @@ int main(int argc, const char * argv[]) {
     double accuracy;
     int sum =0;
     Mat label_int;
-    vector<int> predictions = gmm.predict(NULL);
+    vector<int> predictions = gmm.predict(&pca_data);
     labels.convertTo(label_int,CV_16UC1);
 
-    //cout <<"predictions:" << endl;
-    //for(uint i=0; i < predictions.size(); i++)
-      //  cout << predictions[i] << endl;
+    cout <<"predictions:" << endl;
+    for(uint i=0; i < predictions.size(); i++)
+        cout << predictions[i] << endl;
      //cout << "label int: "<<endl << label_int << endl;
 
-    for(int i =0; i < label_int.rows; i++)
-    {
-        if(label_int.at<short>(i,0) == 0)
-            label_int.at<short>(i,0) = 1;
+    // for(int i =0; i < label_int.rows; i++)
+    // {
+    //     if(label_int.at<short>(i,0) == 0)
+    //         label_int.at<short>(i,0) = 1;
 
-        if(label_int.at<short>(i,0) == 1)
-            label_int.at<short>(i,0) = 0;
-    }
+    //     if(label_int.at<short>(i,0) == 1)
+    //         label_int.at<short>(i,0) = 0;
+    // }
 
     for(int i=0; i < labels.rows; i++)
         if(predictions[i] == label_int.at<short>(i,0))

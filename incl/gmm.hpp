@@ -25,7 +25,6 @@ using namespace cv;
 
 #define ITERATION_THR 0.01
 
-//using ulong = unsigned long ;
 
 class GMM
 {
@@ -56,11 +55,8 @@ private:
     Mat calcMixtureModelsSumLog();
     Mat calcMixtureModels( Mat *data_set_features);
     Mat datasetLikelihoodLog();
-    double multiVariateGaussianLog(GaussianModel &model,const int dataindex) const;
-    double multiVariateGaussian(GaussianModel &model,const int dataindex) const;
-    
- 
-    int findColMaxIndex(Mat column);
+    double multiVariateGaussianLog(GaussianModel &model, Mat data_sample) const;
+    int findColMaxIndex(Mat data_sample);
     
 };
 

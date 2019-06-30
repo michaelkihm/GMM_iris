@@ -22,11 +22,6 @@ enum class FeatureScalar {NORMALIZE, STANDARDIZE};
 using namespace cv;
 using namespace std;
 
-//global
-//cv::Size IMAGE_SIZE = Size(28,28);
-
-//void plotMNISTimage(Mat *dataset, int image_nr);
-//Mat datasetRowToImage(Mat *dataset, int row);
 vector<Mat> splitFeaturesAndLabels(Mat *dataset, uint feature_col_range[2], uint label_column);
 void scaleFeatures(Mat *dataset, uint feature_col_range[2],FeatureScalar method);
 void normalizeData(Mat *dataset, uint feature_col_range[2]);
@@ -35,8 +30,6 @@ double findMin(Mat *dataset_colum);
 void standardizeData(Mat *dataset, uint feature_col_range[2]);
 double calcMean(Mat feature_vector);
 double calcStddev(Mat feature_vector, double mean);
-//void labelsToIntegers(Mat *labels);
-//void splitTrainTest(Mat *dataset, float test_ratio);
 
 
 #endif /* datasethandling_hpp */

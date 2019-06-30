@@ -15,8 +15,6 @@ GMM::GMM(){ }
 // ***************************************************
 // fits the gaussian models to the data
 // ***************************************************
-//Mat GMM::predict(Mat &test_data)
-
 void GMM::fit(Mat *_features, Mat *_targets,const int _classes)
 {
     //init global varibles
@@ -32,7 +30,6 @@ void GMM::fit(Mat *_features, Mat *_targets,const int _classes)
     cout << "Start to train " << classes << " models." << endl;
     runEM();
     cout << "Finished training!" << endl;
-    cout << responsibility_mat << endl;
 }
 
 // ***************************************************
@@ -40,28 +37,28 @@ void GMM::fit(Mat *_features, Mat *_targets,const int _classes)
 // ***************************************************
 const vector<int> GMM::predict( Mat *test_data) 
 {
-    //return Mat(0,0,CV_8U);
     vector<int> result;
-   // int t;
     for(int r=0; r<responsibility_mat.rows; r++)
-    {
-        //t = findColMaxIndex(responsibility_mat.row(r);
-        result.push_back(findColMaxIndex(responsibility_mat.row(r)));
-    }
+        result.push_back(findColMaxIndex(test_data->row(r)));
+    
 
     return result;
 }
 
-int GMM::findColMaxIndex(Mat column)
+// ***************************************************
+// findColMaxIndex
+// ***************************************************
+int GMM::findColMaxIndex(Mat data_sample)
 {
-    double max=numeric_limits<int>::min();
+    double max=numeric_limits<int>::min(), value;
     int index;
-    for(int c=0; c < column.cols; c++)
+    for(int c=0; c < classes; c++)
     {
-        if(column.at<double>(0,c) > max)
+        value = models[c].weight * multiVariateGaussianLog(models[c], data_sample);
+        if(value > max)
         {
             index=c;
-            max = column.at<double>(0,c);
+            max = value;
         }
     }
     return index;
@@ -94,12 +91,10 @@ void GMM::runEM()
     int it_count = 1;
     while(diff > ITERATION_THR)
     {
-        cout << "iteration no: " << it_count++ << endl;
         gmmEStep();
         gmmMStep();
         diff = abs(previous_log_likelihood - log_likelihood());
         previous_log_likelihood = log_likelihood();
-        cout << "iteration likelihood: " << previous_log_likelihood << endl;
     }
 }
 
@@ -113,23 +108,22 @@ void GMM::runEM()
 void GMM::initModels()
 {
     Mat best_labels;
-    int max_iterations = 10;
+    int max_iterations = 5;
     double required_epsilon = 1.0;
-    int kmean_attemps = 5;
+    int kmean_attemps = 50;
     int label;
     
     vector<Mat*> labeled_data(classes);
     for(auto it = labeled_data.begin(); it != labeled_data.end(); ++it)
         *it = new Mat;
     
-    //cout << "init models using kmeans" << endl;
+
     Mat dst;
     features->convertTo(dst, CV_32FC1);
     kmeans(dst, classes, best_labels, TermCriteria( TermCriteria::EPS+TermCriteria::COUNT, max_iterations, required_epsilon),
            kmean_attemps, KMEANS_PP_CENTERS );
     
     
-    //iterate over clusters and assign each data point to the found labels
     for(int i = 0; i < best_labels.rows; i++)
     {
         label = best_labels.at<int>(i,0);
@@ -148,19 +142,12 @@ void GMM::initModels()
       
         //mean and covariance
         calcCovarMatrix(*labeled_data[i], covariance, mean, cv::COVAR_ROWS + cv::COVAR_NORMAL + cv::COVAR_SCALE);
-
-        //cout << "\n"<<covariance.inv() << endl;
-
-        models.push_back(GaussianModel(mean.t(),covariance,weigth));
-        
+        models.push_back(GaussianModel(mean.t(),covariance,weigth));       
     }
     
-    //cout << models[0].covar << endl;yy
     //clean memory
     for(auto it = labeled_data.begin(); it != labeled_data.end(); ++it)
-        delete *it;//*it = new Mat;
-    //labeled_data.clear();
-    
+        delete *it; 
 }
 
 // ***************************************************
@@ -170,25 +157,7 @@ void GMM::initModels()
 // ***************************************************
 void GMM::gmmEStep()
 {
-//    double sum = 0;
-//    for(int data_index=0; data_index < probability_mat.rows; data_index++)
-//    {
-//        for(int model_index = 0; model_index < probability_mat.cols; model_index++)
-//        {
-//            
-//            for(int i=0; i < probability_mat.cols; i++)
-//                sum += models[i].weight * multiVariateGaussian(models[i], data_index);
-//            
-//            probability_mat.at<float>(data_index,model_index) =
-//            models[model_index].weight* multiVariateGaussian(models[model_index], data_index) / sum;
-//            sum = 0;
-//                
-//        }
-//    }
-    //cout << "E step"<<endl;
-    
-    //multiVariateGaussian(GaussianModel model, Mat datapoint)
-    //Mat result = Mat::zeros(model.size(), features.cols, CV_32FC1);
+
     Mat compLogL = datasetLikelihoodLog();
     Mat mixtureLogL = calcMixtureModelsSumLog();
     
@@ -211,14 +180,9 @@ void GMM::gmmEStep()
 // ***************************************************
 void GMM::gmmMStep()
 {
-    //cout << "M step"<<endl;
     double total_weight_mc;
     double res=0;
-    //Mat result;
-    
-    
-    //double weight_pi_c;
-    //double mean_mu_c;
+
     for(uint i=0; i < models.size(); i++)
     {
         total_weight_mc = 0;
@@ -237,7 +201,6 @@ void GMM::gmmMStep()
             models[i].mean.at<double>(dim,0) = res/total_weight_mc;
             res = 0;
         }
-            //res;//result.at<float>(0,0);
             
 
         //covariance matrix
@@ -260,28 +223,18 @@ void GMM::gmmMStep()
 // ***************************************************
 double GMM::log_likelihood()
 {
-//    double result = 0;
-//    double inner_sum = 0;
-//    for(int data_i = 0; data_i < no_of_data_samples; data_i++){
-//        for(int model_i=0; model_i < classes; model_i++)
-//            inner_sum += models[model_i].weight * multiVariateGaussian(models[model_i], data_i);
-//        result += log(inner_sum);
-//        inner_sum = 0;
-//    }
-//
-//    return result;
     return cv::sum(calcMixtureModelsSumLog()).val[0];
 }
 
 // ***************************************************
-//
+// datasetLikelihoodLog
 // ***************************************************
 Mat GMM::datasetLikelihoodLog()
 {
     Mat result(no_of_data_samples,classes, CV_64FC1);
     for(int data_i = 0; data_i < no_of_data_samples; data_i++)
         for(int model_i = 0; model_i < classes; model_i++)
-            result.at<double>(data_i,model_i) = multiVariateGaussianLog(models[model_i], data_i);
+            result.at<double>(data_i,model_i) = multiVariateGaussianLog(models[model_i], features->row(data_i) );
     
     return result;
 
@@ -324,43 +277,20 @@ Mat GMM::calcMixtureModelsSumLog()
 // obtain probability density of given datapoint
 // compute log[ N(x_i|mu,espilon) ]
 // ***************************************************
-double GMM::multiVariateGaussianLog(GaussianModel &model, const int dataindex) const
+double GMM::multiVariateGaussianLog(GaussianModel &model, Mat data_sample /* const int dataindex*/) const
 {
-      double value;
-      Mat datapoint = features->row(dataindex).t();
-//    double constant =  pow(2*M_PI,dimensions/2);
-//    double sigma_det = pow(determinant(model.covar),0.5);
-//    Mat exp_term(1,1,CV_32FC1);
-//
-//    Mat test = Mat(datapoint-model.mean).t();
-//    Mat t2 = datapoint-model.mean;
-//    Mat t7 = test * t2;
-//    cout << "stuff"<<endl;
-//    cv::exp(-0.5* Mat(datapoint-model.mean).t()  *model.covar.inv() * datapoint-model.mean, exp_term);
-//
-//    return pow(constant*sigma_det,-1)*exp_term.at<float>(0,0);
-    
-    
+    double value;
     Mat invertDst;
     invert(model.covar, invertDst);
     Mat transposeDst;
-    transpose(datapoint - model.mean, transposeDst);
+    transpose(data_sample.t() - model.mean, transposeDst);
   
 
     Mat probability = -0.5 * log(determinant(model.covar))
-    - 0.5 * transposeDst * invertDst * (datapoint - model.mean);
+    - 0.5 * transposeDst * invertDst * (data_sample.t() - model.mean);
     value = probability.at<double>(0, 0);
     
     return value;
    
 }
 
-
-// ***************************************************
-//  calcMixtureModels
-//  computes max_value = 0;max_value = 0;max_value = 0;max_value = 0;max_value = 0;
-// ***************************************************
-//Mat GMM::calcMixtureModels(Mat *features)
-//{
-//     Mat compLogL = datasetLikelihoodLog();
-//}
