@@ -1,6 +1,6 @@
 //
 //  GMM.cpp
-//  GMM_mnist
+//  GMM_iris
 //
 //  Created by Michael Kihm on 5/2/19.
 //  Copyright © 2019 MK. All rights reserved.
@@ -195,7 +195,7 @@ void GMM::gmmMStep()
     
     //double weight_pi_c;
     //double mean_mu_c;
-    for(int i=0; i < models.size(); i++)
+    for(uint i=0; i < models.size(); i++)
     {
         total_weight_mc = 0;
         for(int j=0; j < no_of_data_samples; j++)

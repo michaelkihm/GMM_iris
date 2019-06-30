@@ -1,6 +1,6 @@
 //
 //  CSVReader.hpp
-//  GMM_mnist
+//  GMM_iris
 //
 //  Created by Michael Kihm on 5/1/19.
 //  Copyright © 2019 MK. All rights reserved.
