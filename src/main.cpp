@@ -53,7 +53,9 @@ int main(int argc, const char * argv[]) {
     //GMM
     GMM gmm;
     const int species_classes = 3;
-    gmm.fit(&pca_data, NULL,species_classes);
+    gmm.fit(&pca_data,species_classes);
+    //gmm.saveModels("/home/michael/Desktop/models.txt");
+    //gmm.loadTrainedModels("/home/michael/Desktop/models.txt");
     
     double accuracy;
     int sum =0;
@@ -61,9 +63,9 @@ int main(int argc, const char * argv[]) {
     vector<int> predictions = gmm.predict(&pca_data);
     labels.convertTo(label_int,CV_16UC1);
 
-    cout <<"predictions:" << endl;
-    for(uint i=0; i < predictions.size(); i++)
-        cout << predictions[i] << endl;
+    // cout <<"predictions:" << endl;
+    // for(uint i=0; i < predictions.size(); i++)
+    //     cout << predictions[i] << endl;
      //cout << "label int: "<<endl << label_int << endl;
 
     // for(int i =0; i < label_int.rows; i++)

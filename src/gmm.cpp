@@ -15,11 +15,10 @@ GMM::GMM(){ }
 // ***************************************************
 // fits the gaussian models to the data
 // ***************************************************
-void GMM::fit(Mat *_features, Mat *_targets,const int _classes)
+void GMM::fit(Mat *_features, const int _classes)
 {
     //init global varibles
     features = _features;
-    targets = _targets;
     classes = _classes;
     dimensions = _features->cols;
     no_of_data_samples = features->rows;
@@ -29,6 +28,7 @@ void GMM::fit(Mat *_features, Mat *_targets,const int _classes)
     initModels();
     cout << "Start to train " << classes << " models." << endl;
     runEM();
+    models_are_trained = true;
     cout << "Finished training!" << endl;
 }
 
@@ -37,8 +37,14 @@ void GMM::fit(Mat *_features, Mat *_targets,const int _classes)
 // ***************************************************
 const vector<int> GMM::predict( Mat *test_data) 
 {
+    if(!models_are_trained)
+    {
+        cerr << "No trained models for prediction!" << endl;
+        return vector<int>(0);
+    }
+
     vector<int> result;
-    for(int r=0; r<responsibility_mat.rows; r++)
+    for(int r=0; r<test_data->rows; r++)
         result.push_back(findColMaxIndex(test_data->row(r)));
     
 
@@ -67,19 +73,130 @@ int GMM::findColMaxIndex(Mat data_sample)
 // ***************************************************
 // saveModels
 // ***************************************************
-void GMM::saveModels()
+void GMM::saveModels(string path)
 {
+    ofstream file;
+    file.open (path);
+     if(!models_are_trained)
+    {
+        cerr << "No trained models to save" << endl;
+        return;
+    }
+
+    if(!file.is_open()) return;
+
+    file<<"data_dimensions"<<"="<<dimensions<<endl;
+    file<<"classes"<<"="<<classes<<endl;
+    for(int i=0; i < classes; i++)
+    {
+         file<<"model"<<"="<<i<<endl;
+         file<<"weight"<<"="<<models[i].weight<<endl;;
+         file<<"mean"<<"="<<createStringFromMat(models[i].mean)<<endl;
+         file<<"covar"<<"="<<createStringFromMat(models[i].covar)<<endl;
+    }
     
+    file.close();
+
+}
+
+// ***************************************************
+// createStringFromMat
+// ***************************************************
+string GMM::createStringFromMat(Mat cv_mat)
+{
+    string mat_string;
+    for(int r=0; r < cv_mat.rows; r++)
+    {
+        for(int c=0; c < cv_mat.cols; c++)
+        {
+           // mat_string + boost::lexical_cast<std::string>(cv_mat.at<double>(r,c)) +",";
+           if(r > 0 || c > 0)
+            mat_string.append(",");
+           mat_string.append(boost::lexical_cast<std::string>(cv_mat.at<double>(r,c)));
+        }
+    }
+
+    return mat_string;
 }
 
 // ***************************************************
 // loadTrainedModels
 // ***************************************************
-void GMM::loadTrainedModels()
+void GMM::loadTrainedModels(string path)
 {
+    ifstream file(path);
+    if (file.is_open())
+    {
+        models.clear();
+        std::string line;
+        while(getline(file, line)){
+            line.erase(std::remove_if(line.begin(), line.end(), ::isspace),
+                                 line.end());
+            if(line[0] == '#' || line.empty())
+                continue;
+            auto delimiterPos = line.find("=");
+            string name = line.substr(0, delimiterPos);
+            string value = line.substr(delimiterPos + 1);
+            process_model_load_line(name, value);
+        }
+        
+    }
+    else {
+        cerr << "Couldn't open config file "<< path <<" for reading."<<endl;
+        return;
+    }
+
+    models_are_trained = true;
+    file.close();
+    cout << "Loaded models" << endl;
     
 }
 
+// ***************************************************
+// process_model_load_line
+// ***************************************************
+void GMM::process_model_load_line(string name, string value)
+{
+    if(name == "data_dimensions")
+        dimensions = stoi(value);
+    else if(name == "classes")
+        classes = stoi(value);
+    else if(name == "model")
+        models.push_back(GaussianModel());
+    else if(name=="weight")
+        models.back().weight = stod(value);
+    else if(name=="mean")
+        models.back().mean = createMatFromString(value,dimensions, 1);
+    else if(name=="covar")
+        models.back().covar = createMatFromString(value, dimensions, dimensions);
+    else
+    {
+        cerr << "Unknown parameter in model load file: "<< name <<endl;
+        return;
+    }
+    
+
+}
+
+// ***************************************************
+// createMatFromString
+// ***************************************************
+Mat GMM::createMatFromString(string in_string, int rows, int cols)
+{
+    vector<string> string_vec;
+    vector<double> float_vec;
+    Mat out(rows, cols, CV_64FC1);
+    int index=0;
+
+    boost::algorithm::split(string_vec, in_string, boost::is_any_of(","));
+    float_vec.resize(string_vec.size());
+    std::transform(string_vec.begin(), string_vec.end(), float_vec.begin(), [](const std::string& val){ return stod(val); });
+    for(int r=0; r < rows; r++)
+        for(int c=0; c<cols; c++)
+            out.at<double>(r,c) = float_vec[index++];
+
+   return out;
+}
 
 // ***************************************************
 // runs the expectation maximization

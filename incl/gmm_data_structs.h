@@ -18,6 +18,7 @@ struct GaussianModel
     double weight;
     GaussianModel(const cv::Mat _mean, const cv::Mat _covar, double _weight)
     :mean(_mean), covar(_covar), weight(_weight) { };
+    GaussianModel() { };
 };
 
 

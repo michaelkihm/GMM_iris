@@ -33,7 +33,7 @@ Mat CSVReader::getDataset()
         string_vec.clear();
         float_vec.clear();
         boost::algorithm::split(string_vec, line, boost::is_any_of(delimeter));
-        //convert to float
+        //convert to double
         float_vec.resize(string_vec.size());
         std::transform(string_vec.begin(), string_vec.end(), float_vec.begin(), [](const std::string& val){ return stod(val); });
 

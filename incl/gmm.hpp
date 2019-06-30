@@ -13,8 +13,14 @@
 #include <stdio.h>
 #include <vector>
 #include "opencv2/opencv.hpp"
+#include <boost/algorithm/string.hpp>
+#include "boost/lexical_cast.hpp"
 #include <cmath>
 #include <algorithm>
+#include <string>
+#include <fstream>
+
+
 
 #include "gmm_data_structs.h"
 
@@ -30,14 +36,13 @@ class GMM
 {
 public:
     GMM();
-    void fit( Mat *_features, Mat *_targets,const int _classes);
+    void fit( Mat *_features, const int _classes);
     const vector<int> predict( Mat *test_data);
-    void saveModels();
-    void loadTrainedModels();
+    void saveModels(string path);
+    void loadTrainedModels(string path);
     
 private:
     Mat *features;
-    Mat *targets;
     int classes;
     int dimensions; //dimension of dataset
     int no_of_data_samples;
@@ -47,6 +52,9 @@ private:
     
     
     //methods
+    string createStringFromMat(Mat cv_mat);
+    void process_model_load_line(string name, string value);
+    Mat createMatFromString(string in_string,int rows, int cols);
     void runEM();
     void initModels();
     void gmmEStep();
