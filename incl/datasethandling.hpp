@@ -3,9 +3,8 @@
 //  GMM_iris
 //
 //  Created by Michael Kihm on 5/1/19.
-//  Copyright © 2019 MK. All rights reserved.
 //
-// includes functions which includes helper function for the MNIST dataset
+// includes functions which includes helper function for the Iris dataset
 
 #ifndef datasethandling_hpp
 #define datasethandling_hpp

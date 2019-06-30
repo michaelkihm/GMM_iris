@@ -3,7 +3,6 @@
 //  GMM_iris
 //
 //  Created by Michael Kihm on 5/2/19.
-//  Copyright © 2019 MK. All rights reserved.
 //
 // principal component analysis
 #ifndef pca_hpp
